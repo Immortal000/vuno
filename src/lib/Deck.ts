@@ -8,12 +8,12 @@ export class Card {
 		this.suit = suit;
 		this.value = value;
 		this.wild = wild;
-		this.background_string = `bg-${suit}-500`;
+		this.background_string = wild ? `bg-gray-500` : `bg-${suit}-500`;
 	}
 }
 
 export class Deck {
-	cards: Array<Card>;
+	cards: Card[];
 
 	constructor() {
 		this.cards = [];

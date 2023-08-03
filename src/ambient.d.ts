@@ -1,3 +1,5 @@
+import type { Card } from '$lib/Deck';
+
 export interface room_information {
 	members: {
 		[name: string]: {
@@ -6,11 +8,12 @@ export interface room_information {
 	};
 	member_array: Array<string>;
 	current: number;
-	deck: Array<any>;
-	discard: Array<any>;
+	deck: Array<Card>;
+	discard: Array<Card>;
 	available: boolean;
 	host: number;
 	started: false;
+	top?: Card;
 }
 
 export declare namespace card_type {
