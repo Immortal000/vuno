@@ -64,6 +64,14 @@
 
 {#if game_started}
 	<button on:click={draw_card}>Draw Card</button>
+	<div class="w-full bg-gray-200 flex justify-center items-end pl-28 pb-10 relative">
+		<CardView
+			suit={game_info.top?.suit}
+			value={game_info.top?.value}
+			wild={game_info.top?.wild}
+			background_string={game_info.top?.background_string}
+		/>
+	</div>
 	<div class="w-full h-screen bg-gray-200 flex justify-center items-end pl-28 pb-10">
 		{#each current_player_deck as card}
 			<CardView

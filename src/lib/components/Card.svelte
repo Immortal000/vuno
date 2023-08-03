@@ -1,10 +1,10 @@
 <script lang="ts">
 	import '../styles/app.css';
 
-	export let suit: string;
-	export let value: string;
-	export let wild: boolean;
-	export let background_string: string;
+	export let suit: string | undefined;
+	export let value: string | undefined;
+	export let wild: boolean | undefined;
+	export let background_string: string | undefined;
 	// export let z_index: string;
 </script>
 
