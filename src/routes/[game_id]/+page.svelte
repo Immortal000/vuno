@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { io } from 'socket.io-client';
 	import CardView from '../../lib/components/Card.svelte';
-	import type { Card } from '../../lib/Deck';
+	import { Deck, Card } from '../../lib/Deck';
 	import { page } from '$app/stores';
 	import type { room_information } from '../../ambient.d.ts';
 
@@ -40,6 +40,33 @@
 		}
 	};
 
+	const play_card = (event: any) => {
+		const played_card: Card | undefined = new Card(
+			event.target.dataset.suit,
+			event.target.dataset.value,
+			event.target.dataset.wild
+		);
+
+		if (user_name === game_info.member_array[game_info.current]) {
+			let current_top_card: Card | undefined = game_info.top;
+			if (
+				played_card.suit === current_top_card?.suit ||
+				played_card.value === current_top_card?.value
+			) {
+				socket.emit('played card', $page.params.game_id, played_card);
+			} else {
+				alert('Invalid card bro 💀');
+			}
+		} else {
+			alert('Not your turn bro 💀');
+		}
+	};
+
+	socket.on('card played', (rf: room_information) => {
+		game_info = rf;
+		current_player_deck = rf.members[user_name].player_cards;
+	});
+
 	socket.on('game started', (rf: room_information) => {
 		current_player_deck = rf.members[user_name].player_cards;
 		game_info = rf;
@@ -74,18 +101,37 @@
 	</div>
 	<div class="w-full h-screen bg-gray-200 flex justify-center items-end pl-28 pb-10">
 		{#each current_player_deck as card}
-			<CardView
-				suit={card.suit}
-				value={card.value}
-				wild={card.wild}
-				background_string={card.background_string}
-			/>
+			<div
+				tabindex="0"
+				role="button"
+				aria-pressed="false"
+				on:click={(e) => play_card(e)}
+				on:keydown={() => console.log('clicked')}
+				data-value={card.value}
+				data-wild={card.wild}
+				data-suit={card.suit}
+				class={`w-48 h-64 shadow-lg rounded-2xl ${card.background_string} relative -ml-28 hover:-translate-y-6 hover:z-50 transition-all`}
+			>
+				<h1>{card.value}</h1>
+			</div>
 		{/each}
 	</div>
 {/if}
 
 <!-- <div class="w-full h-screen bg-gray-200 flex justify-center items-end pl-28 pb-10">
-	<CardView suit={'sky'} value={'7'} wild={false} background_string={`bg-blue-500`} />
+	<div
+		tabindex="0"
+		role="button"
+		aria-pressed="false"
+		on:click={(e) => play_card(e)}
+		on:keydown={() => console.log('clicked')}
+		data-value={'7'}
+		data-wild={false}
+		data-suit={'gray'}
+		class={`w-48 h-64 shadow-lg rounded-2xl bg-red-500 relative -ml-28 hover:-translate-y-6 hover:z-50 transition-all`}
+	>
+		<h1>{7}</h1>
+	</div>
 	<CardView suit={'sky'} value={'7'} wild={false} background_string={`bg-red-500`} />
 	<CardView suit={'sky'} value={'7'} wild={false} background_string={`bg-blue-500`} />
 	<CardView suit={'sky'} value={'7'} wild={false} background_string={`bg-green-500`} />

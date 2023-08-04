@@ -1,10 +1,14 @@
 export class Card {
-	suit: string;
-	value: string;
-	wild: boolean;
+	suit: string | undefined;
+	value: string | undefined;
+	wild: boolean | undefined;
 	background_string: string;
 
-	constructor(suit: string, value: string, wild: boolean = false) {
+	constructor(
+		suit: string | undefined,
+		value: string | undefined,
+		wild: boolean | undefined = false
+	) {
 		this.suit = suit;
 		this.value = value;
 		this.wild = wild;
