@@ -97,73 +97,78 @@ export const webSocketServer = {
 				}
 			});
 
-			socket.on('played card', (room_id: string, played_card: Card) => {
-				rooms[room_id].discard.push(played_card);
-				rooms[room_id].top = played_card;
+			socket.on(
+				'played card',
+				(room_id: string, played_card: Card, selected_suit: string | undefined = '') => {
+					rooms[room_id].discard.push(played_card);
+					rooms[room_id].top = played_card;
 
-				let cp_cards: Card[] =
-					rooms[room_id].members[rooms[room_id].member_array[rooms[room_id].current]].player_cards;
+					let cp_cards: Card[] =
+						rooms[room_id].members[rooms[room_id].member_array[rooms[room_id].current]]
+							.player_cards;
 
-				const filtered: Card[] = cp_cards.filter((card: Card) => {
-					return card.id != played_card.id;
-				});
+					const filtered: Card[] = cp_cards.filter((card: Card) => {
+						return card.id != played_card.id;
+					});
 
-				rooms[room_id].members[rooms[room_id].member_array[rooms[room_id].current]].player_cards =
-					filtered;
+					rooms[room_id].members[rooms[room_id].member_array[rooms[room_id].current]].player_cards =
+						filtered;
 
-				// rooms[room_id].members[
-				// 	rooms[room_id].member_array[rooms[room_id].current]
-				// ].player_cards.splice(
-				// 	rooms[room_id].members[
-				// 		rooms[room_id].member_array[rooms[room_id].current]
-				// 	].player_cards.indexOf(played_card),
-				// 	1
-				// );
+					// rooms[room_id].members[
+					// 	rooms[room_id].member_array[rooms[room_id].current]
+					// ].player_cards.splice(
+					// 	rooms[room_id].members[
+					// 		rooms[room_id].member_array[rooms[room_id].current]
+					// 	].player_cards.indexOf(played_card),
+					// 	1
+					// );
 
-				if (played_card.value === 'reverse') {
-					rooms[room_id].reversed = !rooms[room_id].reversed;
-				}
-
-				change_player(rooms[room_id].member_array.length, room_id);
-
-				if (played_card.value === 'skip') {
-					change_player(rooms[room_id].member_array.length, room_id);
-				}
-
-				if (played_card.value === 'draw2') {
-					let two_cards: Card[] = rooms[room_id].deck.splice(0, 2);
-					rooms[room_id].members[
-						rooms[room_id].member_array[rooms[room_id].current]
-					].player_cards.push(...two_cards);
-
-					rooms[room_id].discard.push(...two_cards);
-
-					// rooms[room_id].top = rooms[room_id].deck[rooms[room_id].deck.length - 1];
-				}
-
-				if (played_card.wild) {
-					if (played_card.value === 'draw4') {
-						let four_cards: Card[] = rooms[room_id].deck.splice(0, 4);
-						rooms[room_id].members[
-							rooms[room_id].member_array[rooms[room_id].current]
-						].player_cards.push(...four_cards);
-						rooms[room_id].discard.push(...four_cards);
+					if (played_card.value === 'reverse') {
+						rooms[room_id].reversed = !rooms[room_id].reversed;
 					}
 
-					// rooms[room_id].top = rooms[room_id].deck[rooms[room_id].deck.length - 1];
+					change_player(rooms[room_id].member_array.length, room_id);
 
-					// if (played_card.value === 'wild') {
-					// 	rooms[room_id].top!.suit = played_card.suit;
-					// }
+					if (played_card.value === 'skip') {
+						change_player(rooms[room_id].member_array.length, room_id);
+					}
 
-					rooms[room_id].top!.suit = played_card.suit;
-					rooms[room_id].top!.wild = false;
+					if (played_card.value === 'draw2') {
+						let two_cards: Card[] = rooms[room_id].deck.splice(0, 2);
+						rooms[room_id].members[
+							rooms[room_id].member_array[rooms[room_id].current]
+						].player_cards.push(...two_cards);
 
-					console.log(rooms[room_id].top);
+						rooms[room_id].discard.push(...two_cards);
+
+						// rooms[room_id].top = rooms[room_id].deck[rooms[room_id].deck.length - 1];
+					}
+
+					if (played_card.wild) {
+						if (played_card.value === 'draw4') {
+							let four_cards: Card[] = rooms[room_id].deck.splice(0, 4);
+							rooms[room_id].members[
+								rooms[room_id].member_array[rooms[room_id].current]
+							].player_cards.push(...four_cards);
+							rooms[room_id].discard.push(...four_cards);
+						}
+
+						// rooms[room_id].top = rooms[room_id].deck[rooms[room_id].deck.length - 1];
+
+						// if (played_card.value === 'wild') {
+						// 	rooms[room_id].top!.suit = played_card.suit;
+						// }
+
+						rooms[room_id].top!.suit = selected_suit as string;
+						rooms[room_id].top!.wild = false;
+						rooms[room_id].top!.background_string = `bg-${selected_suit}-500`;
+
+						// console.log(rooms[room_id].top);
+					}
+
+					io.to(room_id).emit('card played', rooms[room_id]);
 				}
-
-				io.to(room_id).emit('card played', rooms[room_id]);
-			});
+			);
 
 			socket.on('draw card', (room_id: string) => {
 				rooms[room_id].members[

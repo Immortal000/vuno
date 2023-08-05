@@ -13,6 +13,9 @@
 	let game_started: boolean = false;
 	let joined_room: boolean = false;
 	let game_info: room_information;
+	let choose_suit: boolean = false;
+	let selected_suit: string;
+	let played_card: Card | undefined;
 
 	socket.on('error', (message) => {
 		alert('Room is full, cannot join!');
@@ -40,9 +43,14 @@
 		}
 	};
 
+	const played_wild = () => {
+		socket.emit('played card', $page.params.game_id, played_card, selected_suit);
+		choose_suit = false;
+	};
+
 	const play_card = (event: Event) => {
 		const target = event.target as HTMLButtonElement;
-		const played_card: Card | undefined = new Card(
+		played_card = new Card(
 			target?.dataset.suit,
 			target?.dataset.value,
 			target?.dataset.index,
@@ -53,14 +61,18 @@
 
 		if (user_name === game_info.member_array[game_info.current]) {
 			let current_top_card: Card | undefined = game_info.top;
-			if (
-				played_card.suit === current_top_card?.suit ||
-				played_card.value === current_top_card?.value ||
-				played_card.wild
-			) {
-				socket.emit('played card', $page.params.game_id, played_card);
+			if (played_card.wild) {
+				choose_suit = true;
+				alert('pick color!');
 			} else {
-				alert('Invalid card bro 💀');
+				if (
+					played_card.suit === current_top_card?.suit ||
+					played_card.value === current_top_card?.value
+				) {
+					socket.emit('played card', $page.params.game_id, played_card);
+				} else {
+					alert('Invalid card bro 💀');
+				}
 			}
 		} else {
 			alert('Not your turn bro 💀');
@@ -88,6 +100,16 @@
 
 {#if host}
 	<button on:click={start_game}>Start game</button>
+{/if}
+
+{#if choose_suit}
+	<select name="suit" id="suit" bind:value={selected_suit}>
+		<option value="red">Red</option>
+		<option value="blue">Blue</option>
+		<option value="green">Green</option>
+		<option value="yellow">Yellow</option>
+	</select>
+	<button on:click={played_wild}>Change Color</button>
 {/if}
 
 {#if !joined_room}

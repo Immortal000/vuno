@@ -17,6 +17,10 @@ export class Card {
 		this.background_string = wild ? `bg-gray-500` : `bg-${suit}-500`;
 		this.id = id?.toString();
 	}
+
+	change_bg_color() {
+		this.background_string = `bg-${this.suit}-500`;
+	}
 }
 
 export class Deck {
