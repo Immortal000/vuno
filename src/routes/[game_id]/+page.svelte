@@ -1,6 +1,6 @@
 <script lang="ts">
+	import '$lib/styles/app.css';
 	import { io } from 'socket.io-client';
-	import CardView from '../../lib/components/Card.svelte';
 	import { Deck, Card } from '../../lib/Deck';
 	import { page } from '$app/stores';
 	import type { room_information } from '../../ambient.d.ts';
@@ -40,18 +40,23 @@
 		}
 	};
 
-	const play_card = (event: any) => {
+	const play_card = (event: Event) => {
+		const target = event.target as HTMLButtonElement;
 		const played_card: Card | undefined = new Card(
-			event.target.dataset.suit,
-			event.target.dataset.value,
-			event.target.dataset.wild
+			target?.dataset.suit,
+			target?.dataset.value,
+			target?.dataset.index,
+			target?.dataset.wild == 'true'
 		);
+
+		console.log(played_card.suit);
 
 		if (user_name === game_info.member_array[game_info.current]) {
 			let current_top_card: Card | undefined = game_info.top;
 			if (
 				played_card.suit === current_top_card?.suit ||
-				played_card.value === current_top_card?.value
+				played_card.value === current_top_card?.value ||
+				played_card.wild
 			) {
 				socket.emit('played card', $page.params.game_id, played_card);
 			} else {
@@ -65,6 +70,7 @@
 	socket.on('card played', (rf: room_information) => {
 		game_info = rf;
 		current_player_deck = rf.members[user_name].player_cards;
+		console.log(game_info);
 	});
 
 	socket.on('game started', (rf: room_information) => {
@@ -92,12 +98,15 @@
 {#if game_started}
 	<button on:click={draw_card}>Draw Card</button>
 	<div class="w-full bg-gray-200 flex justify-center items-end pl-28 pb-10 relative">
-		<CardView
-			suit={game_info.top?.suit}
-			value={game_info.top?.value}
-			wild={game_info.top?.wild}
-			background_string={game_info.top?.background_string}
-		/>
+		<div
+			data-value={game_info.top?.value}
+			data-wild={game_info.top?.wild}
+			data-suit={game_info.top?.suit}
+			data-index={game_info.top?.id}
+			class={`w-48 h-64 shadow-lg rounded-2xl ${game_info.top?.background_string} relative -ml-28`}
+		>
+			<h1>{game_info.top?.value}</h1>
+		</div>
 	</div>
 	<div class="w-full h-screen bg-gray-200 flex justify-center items-end pl-28 pb-10">
 		{#each current_player_deck as card}
@@ -110,6 +119,7 @@
 				data-value={card.value}
 				data-wild={card.wild}
 				data-suit={card.suit}
+				data-index={card.id}
 				class={`w-48 h-64 shadow-lg rounded-2xl ${card.background_string} relative -ml-28 hover:-translate-y-6 hover:z-50 transition-all`}
 			>
 				<h1>{card.value}</h1>

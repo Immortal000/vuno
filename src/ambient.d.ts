@@ -14,6 +14,7 @@ export interface room_information {
 	host: number;
 	started: false;
 	top?: Card;
+	reversed: boolean;
 }
 
 export declare namespace card_type {

@@ -3,16 +3,19 @@ export class Card {
 	value: string | undefined;
 	wild: boolean | undefined;
 	background_string: string;
+	id: string | undefined;
 
 	constructor(
 		suit: string | undefined,
 		value: string | undefined,
+		id: string | undefined,
 		wild: boolean | undefined = false
 	) {
 		this.suit = suit;
 		this.value = value;
 		this.wild = wild;
 		this.background_string = wild ? `bg-gray-500` : `bg-${suit}-500`;
+		this.id = id?.toString();
 	}
 }
 
@@ -40,16 +43,19 @@ export class Deck {
 		const suits = ['red', 'blue', 'yellow', 'green'];
 		const suits_specials = ['skip', 'reverse', 'draw2'];
 		const suits_wild = ['wild', 'draw4'];
+		let index: number = 0;
 
 		// Generate normal numbers
 		for (let i: number = 0; i < 10; i++) {
 			suits.forEach((suit) => {
-				this.cards.push(new Card(suit, i.toString()));
+				this.cards.push(new Card(suit, i.toString(), index.toString()));
+				index++;
 			});
 
 			if (i != 0) {
 				suits.forEach((suit) => {
-					this.cards.push(new Card(suit, i.toString()));
+					this.cards.push(new Card(suit, i.toString(), index.toString()));
+					index++;
 				});
 			}
 		}
@@ -58,7 +64,8 @@ export class Deck {
 		for (let i: number = 0; i < 2; i++) {
 			suits.forEach((suit) => {
 				suits_specials.forEach((value) => {
-					this.cards.push(new Card(suit, value));
+					this.cards.push(new Card(suit, value, index.toString()));
+					index++;
 				});
 			});
 		}
@@ -66,7 +73,8 @@ export class Deck {
 		// Generate wild cards
 		for (let i: number = 0; i < 4; i++) {
 			suits_wild.forEach((value) => {
-				this.cards.push(new Card('wild', value, true));
+				this.cards.push(new Card('wild', value, index.toString(), true));
+				index++;
 			});
 		}
 	}
