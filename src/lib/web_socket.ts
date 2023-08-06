@@ -114,15 +114,6 @@ export const webSocketServer = {
 					rooms[room_id].members[rooms[room_id].member_array[rooms[room_id].current]].player_cards =
 						filtered;
 
-					// rooms[room_id].members[
-					// 	rooms[room_id].member_array[rooms[room_id].current]
-					// ].player_cards.splice(
-					// 	rooms[room_id].members[
-					// 		rooms[room_id].member_array[rooms[room_id].current]
-					// 	].player_cards.indexOf(played_card),
-					// 	1
-					// );
-
 					if (played_card.value === 'reverse') {
 						rooms[room_id].reversed = !rooms[room_id].reversed;
 					}
