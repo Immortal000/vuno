@@ -15,10 +15,9 @@ export const webSocketServer = {
 		io.on('connection', (socket) => {
 			socket.emit('eventFromServer', 'Hello, World 👋');
 
-			socket.on('join room', (room_id: string, user_name: string, call_back: Function) => {
+			socket.on('join room', (room_id: string, user_name: string) => {
 				join_room(room_id, user_name);
 				socket.join(room_id);
-				call_back(ROOMS[room_id]);
 				io.to(room_id).emit('room update', ROOMS[room_id]);
 			});
 

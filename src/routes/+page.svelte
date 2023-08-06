@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import '$lib/styles/app.css';
 	import { io } from 'socket.io-client';
 
 	const socket = io();
+	let code: string = '';
 
 	socket.on('eventFromServer', (message: String) => {
 		console.log(message);
@@ -26,10 +28,25 @@
 			/>
 		</div>
 		<div class="flex flex-col mt-12">
-			<button class="w-full bg-slate-400 rounded-md p-2 mb-8 hover:bg-slate-300"
-				>Create a Room</button
-			>
-			<button class="w-full bg-slate-400 rounded-md p-2 hover:bg-slate-300">Join a Friend</button>
+			<div class="w-full flex mb-8">
+				<input type="text" class="w-1/4 rounded-l-md text-center text-2xl" placeholder="0000" />
+				<button class="w-3/4 bg-slate-400 rounded-r-md p-2 hover:bg-slate-300">Create a Room</button
+				>
+			</div>
+			<div class="w-full flex">
+				<input
+					type="text"
+					class="w-1/4 rounded-l-md text-center text-2xl"
+					placeholder="0000"
+					bind:value={code}
+				/>
+				<button
+					class="w-3/4 bg-slate-400 rounded-r-md p-2 hover:bg-slate-300"
+					on:click={() => {
+						goto(`/${code}`);
+					}}>Join a Friend</button
+				>
+			</div>
 		</div>
 	</div>
 </div>
