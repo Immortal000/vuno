@@ -16,6 +16,7 @@
 	let choose_suit: boolean = false;
 	let selected_suit: string;
 	let played_card: Card | undefined;
+	let user_index: number;
 
 	socket.on('error', (message) => {
 		alert('Room is full, cannot join!');
@@ -24,15 +25,16 @@
 	const member_join = () => {
 		socket.emit('join room', $page.params.game_id, user_name, (rf: room_information) => {
 			host = rf.member_array[rf.host] === user_name;
+			user_index = rf.member_array.indexOf(user_name);
+			console.log(user_index);
 		});
 
 		joined_room = true;
 	};
 
 	const start_game = () => {
-		socket.emit('start game', $page.params.game_id, (rf: room_information) => {
-			game_info = rf;
-		});
+		socket.emit('start game', $page.params.game_id);
+		game_started = true;
 	};
 
 	const draw_card = () => {
@@ -44,7 +46,7 @@
 	};
 
 	const played_wild = () => {
-		socket.emit('played card', $page.params.game_id, played_card, selected_suit);
+		socket.emit('play card', $page.params.game_id, played_card, selected_suit);
 		choose_suit = false;
 	};
 
@@ -69,7 +71,16 @@
 					played_card.suit === current_top_card?.suit ||
 					played_card.value === current_top_card?.value
 				) {
-					socket.emit('played card', $page.params.game_id, played_card);
+					socket.emit(
+						'play card',
+						$page.params.game_id,
+						played_card,
+						'',
+						(rf: room_information) => {
+							game_info = rf;
+							current_player_deck = rf.members[user_name].player_cards;
+						}
+					);
 				} else {
 					alert('Invalid card bro 💀');
 				}
@@ -79,22 +90,11 @@
 		}
 	};
 
-	socket.on('card played', (rf: room_information) => {
+	socket.on('room update', (rf: room_information) => {
 		game_info = rf;
-		current_player_deck = rf.members[user_name].player_cards;
-		console.log(game_info);
-	});
-
-	socket.on('game started', (rf: room_information) => {
-		current_player_deck = rf.members[user_name].player_cards;
-		game_info = rf;
-		game_started = true;
-		console.log(current_player_deck);
-	});
-
-	socket.on('drew card', (rf: room_information) => {
-		game_info = rf;
-		current_player_deck = rf.members[user_name].player_cards;
+		current_player_deck = rf.members[user_index].player_cards;
+		game_started = rf.started;
+		console.log('updated!');
 	});
 </script>
 

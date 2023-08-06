@@ -17,6 +17,28 @@ export interface room_information {
 	reversed: boolean;
 }
 
+export interface member_info {
+	player_cards: Card[];
+	user_name: string;
+	won: boolean;
+}
+
+export interface room_info {
+	members: {
+		[name: number]: member_info;
+	};
+	member_array: string[] = [];
+	current: number = 0;
+	deck: Card[] = [];
+	discard: Card[] = [];
+	available: boolean = true;
+	host: number = 0;
+	started: boolean = false;
+	top?: Card = undefined;
+	reversed: boolean = false;
+	total_players: number = 0;
+}
+
 export declare namespace card_type {
 	let suit: String;
 	let value: String;
