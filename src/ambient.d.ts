@@ -37,6 +37,7 @@ export interface room_info {
 	top?: Card = undefined;
 	reversed: boolean = false;
 	total_players: number = 0;
+	finished: boolean;
 }
 
 export declare namespace card_type {

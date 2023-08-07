@@ -1,27 +1,118 @@
 <script lang="ts">
 	import '$lib/styles/app.css';
 	import { io } from 'socket.io-client';
-	import type { Deck, Card } from '../../../lib/Deck';
 	import { page } from '$app/stores';
-	import type { room_information } from '../../../ambient';
+	import type { room_info } from '../../../ambient';
+	import { Card } from '../../../lib/Deck';
 
 	const socket = io();
 
 	let user_name: string = '';
-	let game_info: room_information;
+	let game_info: room_info;
 	let entered_room: boolean = false;
 	let player_cards: Card[] = [];
+	let choose_suit: boolean = false;
+	let selected_suit: string;
+	let won: boolean = false;
+	let winner: string = '';
 
-	socket.on('room update', (rf: room_information) => {
+	let played_card: Card;
+
+	socket.on('room update', (rf: room_info) => {
 		game_info = rf;
 		player_cards = rf.members[rf.member_array.indexOf(user_name)].player_cards;
+
+		console.log(game_info);
+
+		if (game_info?.finished) {
+			for (let index in game_info?.members) {
+				if (game_info?.members[index].won) {
+					if (user_name == game_info?.member_array[index]) {
+						won = true;
+						winner = game_info?.member_array[index];
+					}
+				}
+			}
+		}
 	});
 
-	const play_card = (e: Event) => {};
+	const draw_card = () => {
+		if (user_name === game_info.member_array[game_info.current]) {
+			socket.emit('draw card', $page.params.room_id);
+		} else {
+			alert('Not your turn bro 💀');
+		}
+	};
+
+	const played_wild = () => {
+		socket.emit('play card', $page.params.room_id, played_card, selected_suit);
+		choose_suit = false;
+	};
+
+	const play_card = (e: Event) => {
+		const target = e.target as HTMLButtonElement;
+		played_card = new Card(
+			target?.dataset.suit,
+			target?.dataset.value,
+			target?.dataset.index,
+			target?.dataset.wild == 'true'
+		);
+
+		if (user_name === game_info.member_array[game_info.current]) {
+			let current_top_card: Card = game_info.top as Card;
+			if (played_card.wild) {
+				choose_suit = true;
+			} else {
+				if (
+					played_card.suit === current_top_card?.suit ||
+					played_card.value === current_top_card?.value
+				) {
+					socket.emit('play card', $page.params.room_id, played_card, '');
+				} else {
+					alert('Invalid card bro 💀');
+				}
+			}
+		} else {
+			alert('Not your turn bro 💀');
+		}
+	};
 </script>
 
-<div class="container lg:w-1/2 h-screen mx-auto flex">
+<div class="container md:w-3/4 h-screen mx-auto flex">
+	{#if won && game_info?.finished}
+		<div
+			class="absolute top-0 right-0 bg-black w-screen h-screen flex justify-center items-center text-white z-1000"
+		>
+			<p class="text-3xl">🥳🎉 You won!! 🎉🥳</p>
+		</div>
+	{/if}
+	{#if !won && game_info?.finished}
+		<div
+			class="absolute top-0 right-0 bg-black w-screen h-screen flex justify-center items-center text-white z-1000"
+		>
+			<p class="text-3xl">👎⬇️ You lost!! ⬇️👎</p>
+			<p class="text-lg">{winner} won the game :D</p>
+		</div>
+	{/if}
 	<!-- Username input -->
+	{#if choose_suit}
+		<div
+			class="absolute top-0 right-0 bg-black bg-opacity-80 w-screen h-screen z-10 flex justify-center items-center"
+		>
+			<div class="z-100">
+				<p class="text-3xl text-white mb-5">Choose your suit:</p>
+				<div class="w-full">
+					<select name="" id="" class="w-full" bind:value={selected_suit} on:change={played_wild}>
+						<option value="yellow">Yellow</option>
+						<option value="blue">Blue</option>
+						<option value="green">Green</option>
+						<option value="red">Red</option>
+					</select>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	{#if !entered_room}
 		<div class="container w-3/4 m-auto flex">
 			<input
@@ -35,7 +126,6 @@
 				on:click={() => {
 					socket.emit('join room', $page.params.room_id, user_name);
 					entered_room = true;
-					console.log('HUH');
 				}}>Submit</button
 			>
 		</div>
@@ -69,56 +159,74 @@
 		</div>
 	{/if}
 
-	{#if game_info?.started}
+	{#if game_info?.started && !game_info?.finished}
 		<div class="w-full h-screen p-2">
-			<div class="text-white w-full h-1/2 flex">
-				<div>
+			<div class="text-white w-full h-1/2 flex justify-between">
+				<div class="h-full">
 					{#if game_info?.member_array.indexOf(user_name) == 0}
-						<p>{game_info?.member_array[game_info?.member_array.length - 1]}</p>
+						<p class="mx-auto">{game_info?.member_array[game_info?.member_array.length - 1]}</p>
 					{:else}
-						<p>{game_info?.member_array[game_info?.member_array.indexOf(user_name) - 1]}</p>
+						<p class="mx-auto">
+							{game_info?.member_array[game_info?.member_array.indexOf(user_name) - 1]}
+						</p>
 					{/if}
 				</div>
-				<div class="w-1/2 bg-slate-400 h-5/6 m-auto relative overflow-hidden">
+				<div class="w-1/2 h-5/6 m-auto relative">
 					<div
-						class="w-3/4 h-2/3 ml-28 -rotate-[22deg] overflow-hidden absolute top-12 right-12 bg-gradient-to-b from-[#21232F] to-[#252B48] border-2 border-[#445069]"
+						class="w-48 h-64 absolute top-0 bottom-0 left-0 right-0 m-auto bg-gradient-to-b from-[#21232F] to-[#252B48] border-2 border-[#445069] rotate-[45deg]"
 					/>
 					<div
-						class="w-3/4 h-2/3 ml-28 -rotate-[32deg] overflow-hidden absolute top-14 right-12 bg-gradient-to-b from-[#21232F] to-[#252B48] border-2 border-[#445069]"
+						class="w-48 h-64 absolute top-0 bottom-0 left-0 right-0 m-auto bg-gradient-to-b from-[#21232F] to-[#252B48] border-2 border-[#445069] -rotate-[45deg]"
 					/>
 					<div
-						class="w-3/4 h-2/3 rotate-[90deg] left-12 overflow-hidden absolute top-12 right-32 bg-gradient-to-b from-[#21232F] to-[#252B48] border-2 border-[#445069]"
+						style={`background-color: ${game_info?.top?.suit}`}
+						class={`w-48 h-64 absolute top-0 bottom-0 left-0 right-0 ${game_info?.top?.background_string} m-auto border-2 border-[#445069]`}
 					>
-						<p class="transform -rotate-[90deg] w-full absolute">
+						<p class={`transform w-full h-full align-middle text-center text-3xl text-white`}>
 							{game_info?.top?.value}
 						</p>
 					</div>
 				</div>
-				<div>
+				<div class="h-full">
 					{#if game_info?.member_array.indexOf(user_name) == game_info?.member_array.length - 1}
-						<p>{game_info?.member_array[0]}</p>
+						<p class="mx-auto">{game_info?.member_array[0]}</p>
 					{:else}
-						<p>{game_info?.member_array[game_info?.member_array.indexOf(user_name) + 1]}</p>
+						<p class="mx-auto">
+							{game_info?.member_array[game_info?.member_array.indexOf(user_name) + 1]}
+						</p>
 					{/if}
 				</div>
 			</div>
-			<div class="w-3/4 h-1/2 bg-slate-400 m-auto flex relative">
-				{#each player_cards as card}
-					<div
-						tabindex="0"
-						role="button"
-						aria-pressed="false"
-						on:click={(e) => play_card(e)}
-						on:keydown={() => console.log('clicked')}
-						data-value={card.value}
-						data-wild={card.wild}
-						data-suit={card.suit}
-						data-index={card.id}
-						class={`w-48 h-64 rounded-2xl ${card.background_string} absolute bottom-0 -ml-32 hover:-translate-y-6 hover:z-50 transition-all`}
+			<div class={`h-1/2 w-full m-auto table`}>
+				<div class="w-full flex justify-evenly p-4">
+					<button class="w-1/6 bg-[#5B9A8B] rounded-md hover:bg-[#6A9A8B]" on:click={draw_card}
+						>Draw Card</button
 					>
-						<h1>{card.value}</h1>
-					</div>
-				{/each}
+					{#if game_info?.member_array[game_info?.host] === user_name}
+						<button class="w-1/6 bg-[#5B9A8B] rounded-md hover:bg-[#6A9A8B]">Quit Room</button>
+					{:else}
+						<button class="w-1/6 bg-[#5B9A8B] rounded-md hover:bg-[#6A9A8B]">Quit</button>
+					{/if}
+				</div>
+				<div class="w-full grid-flow-col auto-cols-fr grid">
+					{#each player_cards as card}
+						<div
+							tabindex="0"
+							role="button"
+							aria-pressed="false"
+							on:click={(e) => play_card(e)}
+							on:keydown={() => console.log('clicked')}
+							data-value={card.value}
+							data-wild={card.wild}
+							data-suit={card.suit}
+							data-index={card.id}
+							style={`background-color: ${card.suit}`}
+							class={`w-48 h-64 border-2 rounded-md relative border-2 border-[#445069] hover:z-50 hover:-translate-y-6`}
+						>
+							<p class="text-3xl text-center w-full text-white">{card.value}</p>
+						</div>
+					{/each}
+				</div>
 			</div>
 		</div>
 	{/if}

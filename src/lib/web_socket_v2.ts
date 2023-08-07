@@ -13,12 +13,16 @@ export const webSocketServer = {
 
 		const io = new Server(server.httpServer);
 		io.on('connection', (socket) => {
-			socket.emit('eventFromServer', 'Hello, World 👋');
+			socket.emit('eventFromServer', ROOMS);
 
 			socket.on('join room', (room_id: string, user_name: string) => {
 				join_room(room_id, user_name);
 				socket.join(room_id);
 				io.to(room_id).emit('room update', ROOMS[room_id]);
+			});
+
+			socket.on('create room', (room_id: string) => {
+				create_room(room_id);
 			});
 
 			socket.on('start game', (room_id: string) => {
@@ -34,6 +38,10 @@ export const webSocketServer = {
 			socket.on('play card', (room_id: string, card: Card, selected_suit: string = '') => {
 				play_card(room_id, card, selected_suit);
 				io.to(room_id).emit('room update', ROOMS[room_id]);
+
+				if (ROOMS[room_id].finished) {
+					socket.leave(room_id);
+				}
 			});
 		});
 	}
@@ -53,17 +61,6 @@ const join_room = (room_id: string, user_name: string) => {
 
 			ROOMS[room_id].total_players++;
 		}
-	} else {
-		create_room(room_id);
-		ROOMS[room_id].member_array.push(user_name);
-		// Add the new user to the room
-		ROOMS[room_id].members[ROOMS[room_id].total_players] = {
-			user_name: user_name,
-			won: false,
-			player_cards: []
-		};
-
-		ROOMS[room_id].total_players++;
 	}
 };
 
@@ -78,7 +75,8 @@ const create_room = (room_id: string) => {
 		host: 0,
 		started: false,
 		reversed: false,
-		total_players: 0
+		total_players: 0,
+		finished: false
 	};
 };
 
@@ -89,11 +87,10 @@ const draw_card = (room_id: string) => {
 
 	const card: Card = ROOMS[room_id].deck.pop() as Card;
 	ROOMS[room_id].members[ROOMS[room_id].current].player_cards.push(card);
-
-	change_player(room_id);
 };
 
 const play_card = (room_id: string, played_card: Card, selected_suit: string = '') => {
+	// check if the player won
 	// Add played card to the discard pile
 	ROOMS[room_id].discard.push(played_card);
 	ROOMS[room_id].top = played_card;
@@ -104,9 +101,12 @@ const play_card = (room_id: string, played_card: Card, selected_suit: string = '
 		return card.id != played_card.id;
 	});
 
-	console.log(filtered);
-
 	ROOMS[room_id].members[ROOMS[room_id].current].player_cards = filtered;
+
+	if (ROOMS[room_id].members[ROOMS[room_id].current].player_cards.length === 0) {
+		ROOMS[room_id].finished = true;
+		ROOMS[room_id].members[ROOMS[room_id].current].won = true;
+	}
 
 	// Check for reverse & skip cards
 	if (played_card.value === 'reverse') {

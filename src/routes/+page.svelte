@@ -2,12 +2,15 @@
 	import { goto } from '$app/navigation';
 	import '$lib/styles/app.css';
 	import { io } from 'socket.io-client';
+	import type { room_info } from '../ambient';
 
 	const socket = io();
 	let code: string = '';
 
-	socket.on('eventFromServer', (message: String) => {
-		console.log(message);
+	let rooms_info: { [name: string]: room_info };
+
+	socket.on('eventFromServer', (rooms) => {
+		rooms_info = rooms;
 	});
 </script>
 
@@ -29,8 +32,18 @@
 		</div>
 		<div class="flex flex-col mt-12">
 			<div class="w-full flex mb-8">
-				<input type="text" class="w-1/4 rounded-l-md text-center text-2xl" placeholder="0000" />
-				<button class="w-3/4 bg-slate-400 rounded-r-md p-2 hover:bg-slate-300">Create a Room</button
+				<input
+					type="text"
+					class="w-1/4 rounded-l-md text-center text-2xl"
+					placeholder="0000"
+					bind:value={code}
+				/>
+				<button
+					class="w-3/4 bg-slate-400 rounded-r-md p-2 hover:bg-slate-300"
+					on:click={() => {
+						socket.emit('create room', code);
+						goto(`/new/${code}`);
+					}}>Create a Room</button
 				>
 			</div>
 			<div class="w-full flex">
@@ -43,7 +56,11 @@
 				<button
 					class="w-3/4 bg-slate-400 rounded-r-md p-2 hover:bg-slate-300"
 					on:click={() => {
-						goto(`/${code}`);
+						if (code in rooms_info) {
+							goto(`/new/${code}`);
+						} else {
+							alert('Room does not exist');
+						}
 					}}>Join a Friend</button
 				>
 			</div>
