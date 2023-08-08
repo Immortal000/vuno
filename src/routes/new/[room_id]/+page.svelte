@@ -4,6 +4,8 @@
 	import { page } from '$app/stores';
 	import type { room_info } from '../../../ambient';
 	import { Card } from '../../../lib/Deck';
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	const socket = io();
 
@@ -17,6 +19,14 @@
 	let winner: string = '';
 
 	let played_card: Card;
+
+	onMount(() => {
+		socket.on('eventFromServer', (room_info) => {
+			if (!($page.params.room_id in room_info)) {
+				goto('/');
+			}
+		});
+	});
 
 	socket.on('room update', (rf: room_info) => {
 		game_info = rf;
@@ -203,7 +213,9 @@
 						>Draw Card</button
 					>
 					{#if game_info?.member_array[game_info?.host] === user_name}
-						<button class="w-1/6 bg-[#5B9A8B] rounded-md hover:bg-[#6A9A8B]">Quit Room</button>
+						<button class="w-1/6 bg-[#5B9A8B] rounded-md hover:bg-[#6A9A8B]" on:click={() => {
+							socket.emit('disconnect', $page.params.room_id)
+						}}>Quit Room</button>
 					{:else}
 						<button class="w-1/6 bg-[#5B9A8B] rounded-md hover:bg-[#6A9A8B]">Quit</button>
 					{/if}

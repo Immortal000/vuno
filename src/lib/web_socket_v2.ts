@@ -15,6 +15,10 @@ export const webSocketServer = {
 		io.on('connection', (socket) => {
 			socket.emit('eventFromServer', ROOMS);
 
+			socket.on('disconnect', (room_id:string)=>{
+				socket.leave(room_id)
+			})
+
 			socket.on('join room', (room_id: string, user_name: string) => {
 				join_room(room_id, user_name);
 				socket.join(room_id);
