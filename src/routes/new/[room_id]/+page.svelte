@@ -17,6 +17,7 @@
 	let selected_suit: string;
 	let won: boolean = false;
 	let winner: string = '';
+	let turn_alert: boolean = false;
 
 	let played_card: Card;
 
@@ -32,7 +33,9 @@
 		game_info = rf;
 		player_cards = rf.members[rf.member_array.indexOf(user_name)].player_cards;
 
-		console.log(game_info);
+		if (user_name === game_info.member_array[game_info.current]) {
+			turn_alert = true;
+		}
 
 		if (game_info?.finished) {
 			for (let index in game_info?.members) {
@@ -69,6 +72,7 @@
 		);
 
 		if (user_name === game_info.member_array[game_info.current]) {
+			turn_alert = false;
 			let current_top_card: Card = game_info.top as Card;
 			if (played_card.wild) {
 				choose_suit = true;
@@ -89,6 +93,47 @@
 </script>
 
 <div class="container md:w-3/4 h-screen mx-auto flex">
+	{#if turn_alert && game_info?.started}
+		<div class="p-8 space-y-4 absolute right-12 w-1/4 h-1/12">
+			<div class="flex w-96 shadow-lg rounded-lg">
+				<div class="bg-blue-500 py-4 px-6 rounded-l-lg flex items-center">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="fill-current text-white"
+						viewBox="0 0 16 16"
+						width="20"
+						height="20"
+						><path
+							fill-rule="evenodd"
+							d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"
+						/></svg
+					>
+				</div>
+				<div
+					class="px-4 py-6 bg-white rounded-r-lg flex justify-between items-center w-full border border-l-transparent border-gray-200"
+				>
+					<div>Your turn~</div>
+					<button
+						on:click={() => {
+							turn_alert = false;
+						}}
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="fill-current text-gray-700"
+							viewBox="0 0 16 16"
+							width="20"
+							height="20"
+							><path
+								fill-rule="evenodd"
+								d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"
+							/></svg
+						>
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
 	{#if won && game_info?.finished}
 		<div
 			class="absolute top-0 right-0 bg-black w-screen h-screen flex justify-center items-center text-white z-1000"
@@ -213,9 +258,12 @@
 						>Draw Card</button
 					>
 					{#if game_info?.member_array[game_info?.host] === user_name}
-						<button class="w-1/6 bg-[#5B9A8B] rounded-md hover:bg-[#6A9A8B]" on:click={() => {
-							socket.emit('disconnect', $page.params.room_id)
-						}}>Quit Room</button>
+						<button
+							class="w-1/6 bg-[#5B9A8B] rounded-md hover:bg-[#6A9A8B]"
+							on:click={() => {
+								socket.emit('disconnect', $page.params.room_id);
+							}}>Quit Room</button
+						>
 					{:else}
 						<button class="w-1/6 bg-[#5B9A8B] rounded-md hover:bg-[#6A9A8B]">Quit</button>
 					{/if}

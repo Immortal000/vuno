@@ -15,9 +15,9 @@ export const webSocketServer = {
 		io.on('connection', (socket) => {
 			socket.emit('eventFromServer', ROOMS);
 
-			socket.on('disconnect', (room_id:string)=>{
-				socket.leave(room_id)
-			})
+			socket.on('disconnect', (room_id: string) => {
+				socket.leave(room_id);
+			});
 
 			socket.on('join room', (room_id: string, user_name: string) => {
 				join_room(room_id, user_name);
@@ -45,6 +45,7 @@ export const webSocketServer = {
 
 				if (ROOMS[room_id].finished) {
 					socket.leave(room_id);
+					delete ROOMS[room_id]
 				}
 			});
 		});
@@ -96,7 +97,7 @@ const draw_card = (room_id: string) => {
 const play_card = (room_id: string, played_card: Card, selected_suit: string = '') => {
 	// check if the player won
 	// Add played card to the discard pile
-	ROOMS[room_id].discard.push(played_card);
+	ROOMS[room_id].deck.push(played_card);
 	ROOMS[room_id].top = played_card;
 
 	// Remove the played card from the users hand

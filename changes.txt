@@ -1,0 +1,6 @@
+1) Wild/draw 4 four suit selection 
+2) Next turn notification
+3) smoother transitions
+4) Symbols Card designs
+5) Wild discard -> Color already chosen
+6) disconnect
